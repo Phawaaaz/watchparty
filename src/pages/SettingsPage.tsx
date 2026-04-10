@@ -1,8 +1,10 @@
 import { useTheme } from '../components/theme-provider';
+import { useToast } from '../components/ui/ToastProvider';
 import { Moon, Sun, Monitor, Bell, Shield, CreditCard, Blocks, LogOut, ChevronRight } from 'lucide-react';
 
 const SettingsPage = () => {
     const { theme, setTheme } = useTheme();
+    const { addToast } = useToast();
 
     return (
         <div className="min-h-screen relative transition-colors duration-300 pb-20">
@@ -18,7 +20,7 @@ const SettingsPage = () => {
                         <h2 className="text-sm font-black text-gray-400 dark:text-gray-500 tracking-[0.15em] uppercase mb-6">Appearance</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <button
-                                onClick={() => setTheme("light")}
+                                onClick={() => { setTheme("light"); addToast('Light theme applied', 'success'); }}
                                 className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 ${theme === 'light' ? 'border-brand-500 bg-brand-500/10 shadow-lg' : 'border-gray-200 dark:border-white/5 bg-white dark:bg-[#121214] hover:border-gray-300 dark:hover:border-white/10 shadow-sm'}`}
                             >
                                 <Sun className={`w-8 h-8 mb-4 transition-colors ${theme === 'light' ? 'text-brand-600 dark:text-brand-500' : 'text-gray-400 dark:text-gray-500'}`} />
@@ -26,7 +28,7 @@ const SettingsPage = () => {
                             </button>
 
                             <button
-                                onClick={() => setTheme("dark")}
+                                onClick={() => { setTheme("dark"); addToast('Dark theme applied', 'success'); }}
                                 className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 ${theme === 'dark' ? 'border-brand-500 bg-brand-500/10 shadow-lg' : 'border-gray-200 dark:border-white/5 bg-white dark:bg-[#121214] hover:border-gray-300 dark:hover:border-white/10 shadow-sm'}`}
                             >
                                 <Moon className={`w-8 h-8 mb-4 transition-colors ${theme === 'dark' ? 'text-brand-500' : 'text-gray-400 dark:text-gray-500'}`} />
@@ -34,7 +36,7 @@ const SettingsPage = () => {
                             </button>
 
                             <button
-                                onClick={() => setTheme("system")}
+                                onClick={() => { setTheme("system"); addToast('System theme applied', 'success'); }}
                                 className={`flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300 ${theme === 'system' ? 'border-brand-500 bg-brand-500/10 shadow-lg' : 'border-gray-200 dark:border-white/5 bg-white dark:bg-[#121214] hover:border-gray-300 dark:hover:border-white/10 shadow-sm'}`}
                             >
                                 <Monitor className={`w-8 h-8 mb-4 transition-colors ${theme === 'system' ? 'text-brand-600 dark:text-brand-500' : 'text-gray-400 dark:text-gray-500'}`} />

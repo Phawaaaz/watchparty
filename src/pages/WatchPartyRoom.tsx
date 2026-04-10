@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, Volume2, Maximize, MessageCircle, Settings, Users, ArrowLeft, Send, Check } from 'lucide-react';
@@ -8,6 +8,26 @@ const WatchPartyRoom = () => {
     const { roomId } = useParams();
     const [isSidebarOpen, setSidebarOpen] = useState(true);
     const [isPlaying, setIsPlaying] = useState(true);
+    const [showControls, setShowControls] = useState(true);
+    const idleTimeout = useRef<number | undefined>(undefined);
+
+    useEffect(() => {
+        const handleMouseMove = () => {
+            setShowControls(true);
+            clearTimeout(idleTimeout.current);
+            idleTimeout.current = setTimeout(() => {
+                if (isPlaying) {
+                    setShowControls(false);
+                }
+            }, 3000);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            clearTimeout(idleTimeout.current);
+        };
+    }, [isPlaying]);
 
     return (
         <div className="fixed inset-0 w-screen h-screen bg-black overflow-hidden font-sans select-none flex">
@@ -25,88 +45,98 @@ const WatchPartyRoom = () => {
                 {/* Subtile Vignette Overlay for cinematic feel */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-transparent to-black/80 pointer-events-none" />
 
-                {/* Top Action Bar - Floating (Keeps Dark UI for video legibility) */}
-                <motion.div
-                    initial={{ y: -50, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start z-40 bg-gradient-to-b from-black/60 to-transparent"
-                >
-                    <button
-                        onClick={() => navigate('/')}
-                        className="flex items-center gap-2 px-4 py-2 bg-black/40 hover:bg-black/60 border border-white/10 backdrop-blur-md rounded-full text-white/80 hover:text-white transition group"
-                    >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-sm font-semibold tracking-wide">Leave Room</span>
-                    </button>
+                {/* Controls Overlay Wrapper */}
+                <AnimatePresence>
+                    {showControls && (
+                        <motion.div
+                            key="video-controls"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="absolute inset-0 z-40 pointer-events-none"
+                        >
+                            {/* Top Action Bar - Floating */}
+                            <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start bg-gradient-to-b from-black/60 to-transparent pointer-events-auto">
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="flex items-center gap-2 px-4 py-2 bg-black/40 hover:bg-black/60 border border-white/10 backdrop-blur-md rounded-full text-white/80 hover:text-white transition group"
+                                >
+                                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                                    <span className="text-sm font-semibold tracking-wide">Leave Room</span>
+                                </button>
 
-                    {/* Live Sync Badge */}
-                    <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-2.5 px-4 py-2 bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-full">
-                            <span className="relative flex h-2.5 w-2.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                            </span>
-                            <span className="text-[11px] font-bold tracking-widest text-red-500 uppercase">Live Sync Active</span>
-                        </div>
-                        <div className="flex -space-x-3 hover:space-x-1 transition-all cursor-pointer">
-                            <WatcherBubble src="https://i.pravatar.cc/100?img=33" isHost />
-                            <WatcherBubble src="https://i.pravatar.cc/100?img=12" />
-                            <WatcherBubble src="https://i.pravatar.cc/100?img=5" />
-                            <div className="w-10 h-10 rounded-full border-2 border-black bg-white/10 backdrop-blur flex items-center justify-center text-[10px] font-bold text-white shadow-xl z-10">+4</div>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Bottom Video Controls Overlay (Keeps Dark UI) */}
-                <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-24 bg-gradient-to-t from-black via-black/60 to-transparent z-40 transition-opacity duration-300">
-                    {/* Timeline */}
-                    <div className="relative group cursor-pointer w-full h-8 flex items-center mb-2">
-                        <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden relative">
-                            {/* Buffer bar */}
-                            <div className="absolute top-0 left-0 h-full w-[45%] bg-white/30" />
-                            {/* Played bar */}
-                            <div className="absolute top-0 left-0 h-full w-[32%] bg-[#33bca1] shadow-[0_0_10px_rgba(51,188,161,0.5)]" />
-                        </div>
-                        {/* Playhead handle */}
-                        <div className="absolute left-[32%] top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-[0_0_15px_rgba(255,255,255,0.8)] transition-opacity" />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-6 text-white text-sm">
-                            <button onClick={() => setIsPlaying(!isPlaying)} className="hover:text-[#33bca1] transition-colors focus:outline-none hover:scale-110 active:scale-95 duration-200">
-                                {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
-                            </button>
-                            <div className="flex items-center gap-3 hover:text-[#33bca1] transition-colors group cursor-pointer">
-                                <Volume2 className="w-5 h-5" />
-                                <div className="w-0 overflow-hidden group-hover:w-20 transition-all duration-300 ease-out">
-                                    <div className="w-20 bg-white/20 h-1.5 rounded-full relative"><div className="w-2/3 h-full bg-[#33bca1] rounded-full" /></div>
+                                {/* Live Sync Badge */}
+                                <div className="flex flex-col items-end gap-2">
+                                    <div className="flex items-center gap-2.5 px-4 py-2 bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-full">
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                        </span>
+                                        <span className="text-[11px] font-bold tracking-widest text-red-500 uppercase">Live Sync Active</span>
+                                    </div>
+                                    <div className="flex -space-x-3 hover:space-x-1 transition-all cursor-pointer">
+                                        <WatcherBubble src="https://i.pravatar.cc/100?img=33" isHost />
+                                        <WatcherBubble src="https://i.pravatar.cc/100?img=12" />
+                                        <WatcherBubble src="https://i.pravatar.cc/100?img=5" />
+                                        <div className="w-10 h-10 rounded-full border-2 border-black bg-white/10 backdrop-blur flex items-center justify-center text-[10px] font-bold text-white shadow-xl z-10">+4</div>
+                                    </div>
                                 </div>
                             </div>
-                            <span className="font-medium tracking-wide text-white/70 select-none">34:12 <span className="mx-1 text-white/30">/</span> 1:45:00</span>
-                        </div>
 
-                        <div className="flex items-center gap-6">
-                            <h2 className="text-white/80 font-bold tracking-tight text-lg shadow-black drop-shadow-md hidden md:block">
-                                Interstellar (2014) <span className="px-2 py-0.5 ml-2 bg-white/10 rounded text-[9px] uppercase tracking-wider text-white/50 border border-white/5">Host: Alex</span>
-                            </h2>
-                        </div>
+                            {/* Bottom Video Controls Overlay */}
+                            <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-24 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-auto">
+                                {/* Timeline */}
+                                <div className="relative group cursor-pointer w-full h-8 flex items-center mb-2">
+                                    <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden relative">
+                                        {/* Buffer bar */}
+                                        <div className="absolute top-0 left-0 h-full w-[45%] bg-white/30" />
+                                        {/* Played bar */}
+                                        <div className="absolute top-0 left-0 h-full w-[32%] bg-[#33bca1] shadow-[0_0_10px_rgba(51,188,161,0.5)]" />
+                                    </div>
+                                    {/* Playhead handle */}
+                                    <div className="absolute left-[32%] top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full opacity-0 group-hover:opacity-100 shadow-[0_0_15px_rgba(255,255,255,0.8)] transition-opacity" />
+                                </div>
 
-                        <div className="flex items-center gap-4 text-white">
-                            <button onClick={() => navigate(`/room/${roomId}/host`)} className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 rounded-full border border-white/5 transition-all text-xs font-semibold">
-                                <Settings className="w-4 h-4" /> Room Settings
-                            </button>
-                            <button
-                                onClick={() => setSidebarOpen(!isSidebarOpen)}
-                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isSidebarOpen ? 'bg-[#33bca1]/20 text-[#33bca1]' : 'bg-white/10 hover:bg-white/20 text-white'}`}
-                            >
-                                <MessageCircle className="w-5 h-5" />
-                            </button>
-                            <button className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition focus:outline-none">
-                                <Maximize className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-6 text-white text-sm">
+                                        <button onClick={() => setIsPlaying(!isPlaying)} className="hover:text-[#33bca1] transition-colors focus:outline-none hover:scale-110 active:scale-95 duration-200">
+                                            {isPlaying ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current" />}
+                                        </button>
+                                        <div className="flex items-center gap-3 hover:text-[#33bca1] transition-colors group/volume cursor-pointer">
+                                            <Volume2 className="w-5 h-5" />
+                                            <div className="w-0 overflow-hidden group-hover/volume:w-20 transition-all duration-300 ease-out">
+                                                <div className="w-20 bg-white/20 h-1.5 rounded-full relative"><div className="w-2/3 h-full bg-[#33bca1] rounded-full" /></div>
+                                            </div>
+                                        </div>
+                                        <span className="font-medium tracking-wide text-white/70 select-none">34:12 <span className="mx-1 text-white/30">/</span> 1:45:00</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-6">
+                                        <h2 className="text-white/80 font-bold tracking-tight text-lg shadow-black drop-shadow-md hidden md:block">
+                                            Interstellar (2014) <span className="px-2 py-0.5 ml-2 bg-white/10 rounded text-[9px] uppercase tracking-wider text-white/50 border border-white/5">Host: Alex</span>
+                                        </h2>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 text-white">
+                                        <button onClick={() => navigate(`/room/${roomId}/host`)} className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 rounded-full border border-white/5 transition-all text-xs font-semibold">
+                                            <Settings className="w-4 h-4" /> Room Settings
+                                        </button>
+                                        <button
+                                            onClick={() => setSidebarOpen(!isSidebarOpen)}
+                                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isSidebarOpen ? 'bg-[#33bca1]/20 text-[#33bca1]' : 'bg-white/10 hover:bg-white/20 text-white'}`}
+                                        >
+                                            <MessageCircle className="w-5 h-5" />
+                                        </button>
+                                        <button className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition focus:outline-none">
+                                            <Maximize className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Sidebar (Chat & Social) - Dynamic Light/Dark */}

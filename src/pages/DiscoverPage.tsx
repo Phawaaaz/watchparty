@@ -1,7 +1,21 @@
-import { motion } from 'framer-motion';
-import { Search, SlidersHorizontal, Users, PlaySquare, ChevronRight, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, SlidersHorizontal, Users, PlaySquare, ChevronRight, Zap, Filter, ShieldCheck, TrendingUp, Compass, Clock, Star } from 'lucide-react';
+import { MovieCardSkeleton } from '../components/ui/Skeleton';
 
 const DiscoverPage = () => {
+    const [searchQuery, setSearchQuery] = useState("");
+    const [activeTab, setActiveTab] = useState("trending");
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Simulate network request loading time for micro-interactions
+    useEffect(() => {
+        setIsLoading(true);
+        const timer = setTimeout(() => {
+            setIsLoading(false);
+        }, 1500);
+        return () => clearTimeout(timer);
+    }, [activeTab]);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -53,6 +67,33 @@ const DiscoverPage = () => {
                         </button>
                     </div>
                 </motion.div>
+
+                <AnimatePresence mode="wait">
+                    {isLoading ? (
+                        <motion.div
+                            key="skeletons"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 gap-y-10"
+                        >
+                            {Array.from({ length: 10 }).map((_, i) => (
+                                <MovieCardSkeleton key={i} />
+                            ))}
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="content"
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 gap-y-10"
+                        >
+                            {/* MOCK_MOVIES mapping would go here */}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Trending Section */}
                 <motion.section variants={itemVariants} className="mb-20 pt-8 border-t border-gray-200 dark:border-white/5 transition-colors">

@@ -61,7 +61,7 @@ const LandingPage = () => {
                     className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center max-w-md mx-auto"
                 >
                     <button
-                        onClick={() => navigate('/join')}
+                        onClick={() => navigate('/signup')}
                         className="w-full sm:w-auto px-8 py-4 bg-brand-500 text-white dark:text-black font-extrabold text-[15px] rounded-2xl flex items-center justify-center gap-2 hover:bg-brand-400 transition-all hover:scale-105 active:scale-95 shadow-[0_8px_30px_rgba(51,188,161,0.3)] dark:shadow-[0_0_30px_rgba(51,188,161,0.3)]"
                     >
                         <Video className="w-5 h-5 fill-white/20 dark:fill-black/20" /> Host a Room
